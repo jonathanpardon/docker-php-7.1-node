@@ -1,34 +1,27 @@
 FROM php:7.1-fpm
 
+RUN rm /etc/apt/preferences.d/no-debian-php
+
 # Install selected extensions and other stuff
 RUN apt-get update && apt-get install -y \
     wget \
+    gnupg \
     apt-transport-https \
     apt-utils \
+    webp \
+    git \
+    zip \
     openssh-client \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
     libmcrypt-dev \
-    libpng12-dev \
     libxml2-dev \
-    wkhtmltopdf \
-    xvfb \
     libssl-dev \
-    pkg-config \
-    zip \
-    unzip \
-    git \
-    default-jre \
-    libjpeg62-turbo-dev \
-    webp \
     libwebp-dev \
     libxpm-dev \
-    imagemagick \
-    libtool \
-    libmagickwand-dev \
-    libmagickcore-dev \
-    libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++ \
-    php7.1-ldap \
+    pkg-config \
+    php-soap \
+    libldap2-dev -y \
     && docker-php-ext-install -j$(nproc) iconv mcrypt \
     && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip \
     && docker-php-ext-configure gd \
@@ -37,18 +30,24 @@ RUN apt-get update && apt-get install -y \
     --with-webp-dir=/usr/include/ \
     --with-png-dir=/usr/include/ \
     --with-xpm-dir=/usr/include/ \
-    && docker-php-ext-install -j$(nproc) exif gd
+    && docker-php-ext-install -j$(nproc) exif gd \
+    && docker-php-ext-install soap \
+    && docker-php-ext-install ldap
 
-RUN pecl install redis \
-    && pecl install imagick-3.4.3 \
-    && pecl install xdebug \
-    && pecl install apcu \
-    && pecl install mongodb \
-    && docker-php-ext-enable redis xdebug apcu mongodb imagick soap
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug ldap
 
 # install from nodesource using apt-get
-RUN curl -sL https://deb.nodesource.com/setup | sudo bash - && \
-    RUN apt-get install -yq nodejs build-essential
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get install -yq nodejs build-essential
 
 # fix npm - not the latest version installed by apt-get
 RUN npm install -g npm
+
+# COMPOSER #################################################################
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 
+
+RUN composer global require hirak/prestissimo
+
+RUN mkdir -p /root/.composer
+RUN echo '{"http-basic":{"proximity-bbdo.git.beanstalkapp.com":{"username": "dockerreader","password": "4+nyYXAcNkcbV"}}}' > /root/.composer/auth.json
