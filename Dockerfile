@@ -48,6 +48,3 @@ RUN npm install -g npm
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 
 
 RUN composer global require hirak/prestissimo
-
-RUN mkdir -p /root/.composer
-RUN echo '{"http-basic":{"proximity-bbdo.git.beanstalkapp.com":{"username": "dockerreader","password": "4+nyYXAcNkcbV"}}}' > /root/.composer/auth.json
